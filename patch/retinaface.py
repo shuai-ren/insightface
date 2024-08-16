@@ -212,6 +212,7 @@ class RetinaFace:
         input_size = self.input_size if input_size is None else input_size
 
         if img.shape[0] <= input_size[0] and img.shape[1] <= input_size[1]:
+            det_scale = 1
             det_img = np.zeros((input_size[1], input_size[0], 3), dtype=np.uint8)
             det_img[:img.shape[0], :img.shape[1], :] = img
         else:
