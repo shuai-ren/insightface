@@ -5,6 +5,7 @@
 docker pull shuairen/insightface:cuda11.1
 # GPU解码
 docker pull shuairen/insightface:cudacodec
+# docker.sh为创建容器示例命令
 ```
 
 # 生成人脸特征向量库

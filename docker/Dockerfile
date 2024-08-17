@@ -68,7 +68,7 @@ RUN cd /opt/opencv-4.7.0/ && mkdir build && cd build && cmake -D CMAKE_BUILD_TYP
     -D PYTHON3_PACKAGES_PATH=/usr/lib/python3/dist-packages \
     -D BUILD_EXAMPLES=ON -D WITH_OPENGL=ON -D WITH_GTK_2_X=ON -D WITH_GTK=OFF \
     -D CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-11.1 ..  && \
-    make -j12 && make -j12 install
+    make -j12 && make install
 
 
 RUN echo "/usr/local/opencv-4.7.0/lib" >> /etc/ld.so.conf.d/opencv4.7.conf && ldconfig
