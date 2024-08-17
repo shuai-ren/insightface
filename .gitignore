@@ -1,3 +1,4 @@
 *.onnx
 data/*.index
 data/*.pkl
+*.pyc
