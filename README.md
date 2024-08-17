@@ -1,7 +1,10 @@
 # 运行环境
 
 ```
+# CPU解码
 docker pull shuairen/insightface:cuda11.1
+# GPU解码
+docker pull shuairen/insightface:cudacodec
 ```
 
 # 生成人脸特征向量库
@@ -60,5 +63,8 @@ python3 tools/extract_features.py <文件夹名称>
 # 运行命令
 
 ```
-python3 face.py --video <video> --http_port <http_port> --rtsp_port <rtsp_port> --dist-thres <dist-thres>
+# CPU解码
+python3 face.py --video <video> --json_port <json_port> --rtsp_port <rtsp_port> --dist-thres <dist-thres>
+# GPU解码
+python3 face_cudacodec.py --video <video> --json_port <json_port> --rtsp_port <rtsp_port> --dist-thres <dist-thres>
 ```
