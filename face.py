@@ -36,7 +36,7 @@ def main():
     font = ImageFont.truetype(args.font_file, 50)
 
     data_deque = deque(maxlen=50)
-    start(data_deque, args.http_port, args.rtsp_port, out_size=(out_width, out_height))
+    start(data_deque, args.http_port, args.rtsp_port, args.mjpeg_port, out_size=(out_width, out_height))
 
     cap = cv2.VideoCapture(args.video)
     # w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -109,8 +109,9 @@ if __name__ == '__main__':
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--dist-thres', type=float, default=1.0, help='distance threshold')
     parser.add_argument('--interval', type=int, default=5, help='sample interval')
-    parser.add_argument('--http_port', type=int, required=True, help='http port')
-    parser.add_argument('--rtsp_port', type=int, required=True, help='rtsp port')
+    parser.add_argument('--http_port', type=int, help='http port')
+    parser.add_argument('--rtsp_port', type=int, help='rtsp port')
+    parser.add_argument('--mjpeg_port', type=int, help='mjpeg port')
     parser.add_argument('--index-file', type=str, default="./data/faiss_index.index", help='index file')
     parser.add_argument('--metadata-file', type=str, default="./data/metadata.pkl", help='metadata file')
     parser.add_argument('--font-file', type=str, default="./font/simsun.ttc", help='font file')
