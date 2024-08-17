@@ -32,21 +32,24 @@ def main():
     app = FaceAnalysis(name='buffalo_l', root='./', allowed_modules=['detection', 'recognition'], providers=['CUDAExecutionProvider'])
     app.prepare(ctx_id=0, det_size=(640, 640), det_thresh=args.conf_thres)
 
+    # warmup
+    app.get(np.random.randn(640, 640, 3))
+
     index, features_dict = load_index_and_metadata(args.index_file, args.metadata_file)
     font = ImageFont.truetype(args.font_file, 50)
 
     data_deque = deque(maxlen=100)
-    start(data_deque, args.http_port, args.rtsp_port, out_size=(out_width, out_height))
+    start(data_deque, args.json_port, args.rtsp_port, args.mjpeg_port, out_size=None, fps=25, max_length=50, timeout=10)
 
     param = cv2.cudacodec.VideoReaderInitParams()
     param.udpSource = True
     video_reader = cv2.cudacodec.createVideoReader(args.video, params=param)
     stream = cv2.cuda_Stream()
-    color = (0, 0, 255)
 
     frame_id = 0
     reconnected = False
     objects = []
+    color = (0, 0, 255)
 
     start_time = time.time()
     while True:
@@ -65,23 +68,26 @@ def main():
         frame = frame_bgr_gpu_outsize.download(stream=stream)
         orig_w, orig_h = frame_bgr_gpu.size()
 
+        t2 = time.time()
         frame_id += 1
 
         if frame_id % args.interval == 0:
+            objects = []
 
             new_width = 640
-            new_height = int(new_width * out_width / out_height)
+            new_height = int(new_width / out_width * out_height)
             resized_frame = cv2.cuda.resize(frame_bgr_gpu, (new_width, new_height), stream=stream).download(stream=stream)
 
-            objects = []
+            t3 = time.time()
             faces = app.get(resized_frame)
+            t4 = time.time()
 
             for face in faces:
                 normalized_features = normalize_vector(face["embedding"])
                 conf = face["det_score"].tolist()
-                bbox = face.bbox / (new_width, new_height)
-                bbox_orig = (bbox * (orig_w, orig_h)).astype(int).tolist()
-                bbox_draw = (bbox * (out_width, out_height)).astype(int)
+                bbox = face.bbox / (new_width, new_height, new_width, new_height)
+                bbox_orig = (bbox * (orig_w, orig_h, orig_w, orig_h)).astype(int).tolist()
+                bbox_draw = (bbox * (out_width, out_height, out_width, out_height)).astype(int)
                 distances, indices = index.search(np.array([normalized_features]), 1)
                 person_name = "未知"
  
@@ -108,11 +114,12 @@ def main():
                 frame = np.array(image_pil)
                 cv2.rectangle(frame, (bbox_draw[0], bbox_draw[1]), (bbox_draw[2], bbox_draw[3]), color, 2)
 
-            print('fps: %.3f, \tavg_fps: %.3f, \tbuffer: %g' % (1 / (time.time() - t0), frame_id / (time.time() - start_time), len(data_deque)))
+            t5 = time.time()
+            print('read: %.3f, download: %.3f, \tprep: %.3f, \tinfer: %.3f, \tpost: %.3f' % (1/(t1-t0), 1/(t2-t1), 1/(t3-t2), 1/(t4-t3), 1/(t5-t4)))
+        print('fps: %.3f, \tavg_fps: %.3f, \tbuffer: %g' % (1 / (time.time() - t0), frame_id / (time.time() - start_time), len(data_deque)))
 
         json = {"frame_id": frame_id,
                 "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                # "resolution": [w, h],
                 "objects": objects
         }
         data_deque.append((json, frame))
@@ -124,8 +131,9 @@ if __name__ == '__main__':
     parser.add_argument('--conf-thres', type=float, default=0.5, help='object confidence threshold')
     parser.add_argument('--dist-thres', type=float, default=1.0, help='distance threshold')
     parser.add_argument('--interval', type=int, default=5, help='sample interval')
-    parser.add_argument('--http_port', type=int, required=True, help='http port')
-    parser.add_argument('--rtsp_port', type=int, required=True, help='rtsp port')
+    parser.add_argument('--json_port', type=int, help='json port')
+    parser.add_argument('--rtsp_port', type=int, help='rtsp port')
+    parser.add_argument('--mjpeg_port', type=int, help='mjpeg port')
     parser.add_argument('--index-file', type=str, default="./data/faiss_index.index", help='index file')
     parser.add_argument('--metadata-file', type=str, default="./data/metadata.pkl", help='metadata file')
     parser.add_argument('--font-file', type=str, default="./font/simsun.ttc", help='font file')
