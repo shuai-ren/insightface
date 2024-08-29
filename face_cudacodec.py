@@ -36,7 +36,7 @@ def main():
     app.get(np.random.randn(640, 640, 3))
 
     index, features_dict = load_index_and_metadata(args.index_file, args.metadata_file)
-    font = ImageFont.truetype(args.font_file, 50)
+    font = ImageFont.truetype(args.font_file, 30)
 
     data_deque = deque(maxlen=100)
     start(data_deque, args.json_port, args.rtsp_port, args.mjpeg_port, out_size=None, fps=25, max_length=50, timeout=10)
@@ -109,8 +109,8 @@ def main():
 
                 image_pil = Image.fromarray(frame)
                 draw = ImageDraw.Draw(image_pil)
-                text = "{}: {:.2f}".format(person_name, distance)
-                draw.text((bbox_draw[0], bbox_draw[1] - 50), text, font=font, fill=color)
+                text = "{}: {:.1f}% {:.2f}".format(person_name, conf*100, distance)
+                draw.text((bbox_draw[0], bbox_draw[1] - 30), text, font=font, fill=color)
                 frame = np.array(image_pil)
                 cv2.rectangle(frame, (bbox_draw[0], bbox_draw[1]), (bbox_draw[2], bbox_draw[3]), color, 2)
 
